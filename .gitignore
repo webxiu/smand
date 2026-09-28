@@ -1,0 +1,12 @@
+# 构建目录
+build/
+build-*/
+
+# Qt Creator 用户配置
+CMakeLists.txt.user
+*.autosave
+
+# 编译产物
+*.exe
+*.obj
+*.pdb
