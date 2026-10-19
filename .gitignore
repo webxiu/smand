@@ -14,4 +14,8 @@ CMakeLists.txt.user
 
 # 打包产物
 dist*/
+release/
 *.zip
+
+# 与项目无关的临时文件
+pending-backup.txt

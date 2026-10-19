@@ -22,21 +22,21 @@ if(QT_VERSION_MAJOR EQUAL 6)
 endif()
 
 set(SMAND_SOURCES
-    main.cpp
-    icons.h
-    icons.cpp
-    appdata.h
-    appdata.cpp
-    listpage.h
-    listpage.cpp
-    launcherpage.h
-    launcherpage.cpp
-    installedappspage.h
-    installedappspage.cpp
-    aboutpage.h
-    aboutpage.cpp
-    mainwindow.h
-    mainwindow.cpp
+    src/main.cpp
+    src/mainwindow.h
+    src/mainwindow.cpp
+    src/pages/listpage.h
+    src/pages/listpage.cpp
+    src/pages/launcherpage.h
+    src/pages/launcherpage.cpp
+    src/pages/installedappspage.h
+    src/pages/installedappspage.cpp
+    src/pages/aboutpage.h
+    src/pages/aboutpage.cpp
+    src/data/appdata.h
+    src/data/appdata.cpp
+    src/utils/icons.h
+    src/utils/icons.cpp
 )
 
 if(QT_VERSION_MAJOR EQUAL 6)
@@ -46,6 +46,15 @@ else()
 endif()
 
 target_link_libraries(smand PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+
+# 头文件按功能分散在 src 各子目录，统一加入搜索路径，
+# 源码内 #include "xxx.h" 无需带相对路径（AUTOMOC 同样依赖此设置）
+target_include_directories(smand PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/pages
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/data
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/utils
+)
 
 # 源码包含中文和 emoji，必须告诉 MSVC 按 UTF-8 编译
 if(MSVC)

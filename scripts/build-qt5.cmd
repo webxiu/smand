@@ -6,6 +6,11 @@ rem  产物：build-qt5\smand.exe（需配合 package-qt5.cmd 打包分发）
 rem ============================================================
 setlocal
 
+rem 项目根目录（本脚本位于 scripts\ 子目录，回退一级即根目录）
+pushd "%~dp0.."
+set "ROOT=%CD%"
+popd
+
 rem VS2022 编译环境初始化脚本
 set "VCVARS=D:\apps\Visual Studio\Commumity\VC\Auxiliary\Build\vcvars64.bat"
 rem Qt 5.15.2 安装位置（最后支持 Win7/8 的 LTS 版本）
@@ -28,16 +33,16 @@ set "PATH=%VS_CMAKE%;%VS_NINJA%;%PATH%"
 call "%VCVARS%" >nul || (echo [错误] VS 环境初始化失败 & exit /b 1)
 
 echo [1/2] 配置 CMake（Qt 5.15.2 兼容版）...
-cmake -S "%~dp0." -B "%~dp0build-qt5" -G Ninja ^
+cmake -S "%ROOT%" -B "%ROOT%\build-qt5" -G Ninja ^
       -DCMAKE_BUILD_TYPE=Release ^
       -DCMAKE_PREFIX_PATH="%QT5_DIR%" || exit /b 1
 
 echo [2/2] 编译中 ...
-cmake --build "%~dp0build-qt5" || exit /b 1
+cmake --build "%ROOT%\build-qt5" || exit /b 1
 
 echo.
 echo ============================================
-echo  编译完成: %~dp0build-qt5\smand.exe
+echo  编译完成: %ROOT%\build-qt5\smand.exe
 echo  分发请运行 package-qt5.cmd 生成兼容版 zip
 echo ============================================
 endlocal

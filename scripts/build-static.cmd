@@ -4,7 +4,7 @@ rem  smand 静态编译脚本：产出零依赖单文件 exe（约 17MB）
 rem
 rem  用法（任选其一）：
 rem    1. 直接双击本文件运行（最方便），跑完按任意键关闭窗口
-rem    2. 命令行执行: build-static.cmd
+rem    2. 命令行执行: scripts\build-static.cmd
 rem  产物：build-static\smand.exe
 rem    分发：就这一个文件，发给对方即可双击运行
 rem
@@ -12,6 +12,11 @@ rem  前置条件：本机已编译安装静态 Qt
 rem    （D:\apps\Qt\6.8.3\msvc2022_64_static 已就绪）
 rem ============================================================
 setlocal
+
+rem 项目根目录（本脚本位于 scripts\ 子目录，回退一级即根目录）
+pushd "%~dp0.."
+set "ROOT=%CD%"
+popd
 
 rem VS2022 编译环境初始化脚本
 set "VCVARS=D:\apps\Visual Studio\Commumity\VC\Auxiliary\Build\vcvars64.bat"
@@ -40,17 +45,17 @@ if errorlevel 1 (
 )
 
 echo [2/3] 配置 CMake（静态 Qt + /MT 静态运行库）...
-cmake -S "%~dp0." -B "%~dp0build-static" -G Ninja ^
+cmake -S "%ROOT%" -B "%ROOT%\build-static" -G Ninja ^
       -DCMAKE_BUILD_TYPE=Release ^
       -DCMAKE_PREFIX_PATH="%QT_STATIC_DIR%" ^
       -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded || goto :fail
 
 echo [3/3] 编译中 ...
-cmake --build "%~dp0build-static" || goto :fail
+cmake --build "%ROOT%\build-static" || goto :fail
 
 echo.
 echo ============================================
-echo  编译产物: %~dp0build-static\smand.exe
+echo  编译产物: %ROOT%\build-static\smand.exe
 echo  单文件，约 17MB，可直接发给对方双击运行
 echo ============================================
 goto :done

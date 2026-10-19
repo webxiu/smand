@@ -1,10 +1,15 @@
 @echo off
 rem ============================================================
 rem  smand 一键打包脚本：编译 + 部署 Qt 运行库 + 压缩成可分发 zip
-rem  用法：直接双击运行，或在命令行执行 package.cmd
-rem  产物：smand-vX.X.X-win64.zip —— 发给别人，解压即可运行
+rem  用法：直接双击运行，或在命令行执行 scripts\package.cmd
+rem  产物：release\smand-vX.X.X-win64.zip —— 发给别人，解压即可运行
 rem ============================================================
 setlocal
+
+rem 项目根目录（本脚本位于 scripts\ 子目录，回退一级即根目录）
+pushd "%~dp0.."
+set "ROOT=%CD%"
+popd
 
 rem Qt 安装位置（windeployqt 在其 bin 目录下）
 set "QT_DIR=D:\apps\Qt\6.8.3\msvc2022_64"
@@ -27,9 +32,9 @@ echo [1/5] 先编译最新版 ...
 call "%~dp0build.cmd" || exit /b 1
 
 echo [2/5] 清空并重建 dist 目录 ...
-if exist "%~dp0dist" rmdir /s /q "%~dp0dist"
-mkdir "%~dp0dist"
-copy /y "%~dp0build\smand.exe" "%~dp0dist\smand.exe" >nul || (
+if exist "%ROOT%\dist" rmdir /s /q "%ROOT%\dist"
+mkdir "%ROOT%\dist"
+copy /y "%ROOT%\build\smand.exe" "%ROOT%\dist\smand.exe" >nul || (
     echo [错误] 拷贝 smand.exe 失败，程序可能正在运行，请先退出
     exit /b 1
 )
@@ -43,20 +48,21 @@ rem --no-compiler-runtime     不拷 vc_redist 安装器（第 4 步改为直接拷 CRT DLL）
 "%QT_DIR%\bin\windeployqt.exe" --release ^
     --no-translations --no-system-dxc-compiler --no-system-d3d-compiler ^
     --no-opengl-sw --no-compiler-runtime ^
-    "%~dp0dist\smand.exe" || exit /b 1
+    "%ROOT%\dist\smand.exe" || exit /b 1
 
 echo [4/5] 拷贝 VC++ 运行库（vcruntime140 等，目标机器无需安装）...
-copy /y "%VC_CRT_DIR%\*.dll" "%~dp0dist\" >nul || exit /b 1
+copy /y "%VC_CRT_DIR%\*.dll" "%ROOT%\dist\" >nul || exit /b 1
 
 echo [5/5] 压缩成 zip ...
-if exist "%~dp0%ZIP_NAME%" del /q "%~dp0%ZIP_NAME%"
-powershell -NoProfile -Command "Compress-Archive -Path '%~dp0dist\*' -DestinationPath '%~dp0%ZIP_NAME%' -Force" || exit /b 1
+if not exist "%ROOT%\release" mkdir "%ROOT%\release"
+if exist "%ROOT%\release\%ZIP_NAME%" del /q "%ROOT%\release\%ZIP_NAME%"
+powershell -NoProfile -Command "Compress-Archive -Path '%ROOT%\dist\*' -DestinationPath '%ROOT%\release\%ZIP_NAME%' -Force" || exit /b 1
 
 echo.
 echo ============================================
 echo  打包完成:
-echo    可分发压缩包: %~dp0%ZIP_NAME%
-echo    解压后目录:   dist\
+echo    可分发压缩包: %ROOT%\release\%ZIP_NAME%
+echo    解压后目录:   %ROOT%\dist\
 echo  发送 zip 给对方，解压后双击 smand.exe 即可运行
 echo ============================================
 endlocal
