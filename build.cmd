@@ -1,40 +1,40 @@
 @echo off
 rem ============================================================
-rem  smand ä¸€é”®ç¼–è¯‘è„šæœ¬ï¼ˆVS2022 MSVC + Qt 6.8.3ï¼‰
-rem  ç”¨æ³•ï¼šç›´æ¥åŒå‡»è¿è¡Œï¼Œæˆ–åœ¨å‘½ä»¤è¡Œæ‰§è¡Œ build.cmd
+rem  smand Ò»¼ü±àÒë½Å±¾£¨VS2022 MSVC + Qt 6.8.3£©
+rem  ÓÃ·¨£ºÖ±½ÓË«»÷ÔËĞĞ£¬»òÔÚÃüÁîĞĞÖ´ĞĞ build.cmd
 rem ============================================================
 setlocal
 
-rem VS2022 ç¼–è¯‘ç¯å¢ƒåˆå§‹åŒ–è„šæœ¬
+rem VS2022 ±àÒë»·¾³³õÊ¼»¯½Å±¾
 set "VCVARS=D:\apps\Visual Studio\Commumity\VC\Auxiliary\Build\vcvars64.bat"
-rem Qt å®‰è£…ä½ç½®
+rem Qt °²×°Î»ÖÃ
 set "QT_DIR=D:\apps\Qt\6.8.3\msvc2022_64"
-rem VS è‡ªå¸¦çš„ CMake å’Œ Ninja
+rem VS ×Ô´øµÄ CMake ºÍ Ninja
 set "VS_CMAKE=D:\apps\Visual Studio\Commumity\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin"
 set "VS_NINJA=D:\apps\Visual Studio\Commumity\Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja"
 
 if not exist "%VCVARS%" (
-    echo [é”™è¯¯] æ‰¾ä¸åˆ° VS çš„ vcvars64.bat: %VCVARS%
+    echo [´íÎó] ÕÒ²»µ½ VS µÄ vcvars64.bat: %VCVARS%
     exit /b 1
 )
 if not exist "%QT_DIR%\bin\qmake.exe" (
-    echo [é”™è¯¯] æ‰¾ä¸åˆ° Qt: %QT_DIR%
+    echo [´íÎó] ÕÒ²»µ½ Qt: %QT_DIR%
     exit /b 1
 )
 
 set "PATH=%VS_CMAKE%;%VS_NINJA%;%PATH%"
-call "%VCVARS%" >nul || (echo [é”™è¯¯] VS ç¯å¢ƒåˆå§‹åŒ–å¤±è´¥ & exit /b 1)
+call "%VCVARS%" >nul || (echo [´íÎó] VS »·¾³³õÊ¼»¯Ê§°Ü & exit /b 1)
 
-echo [1/2] é…ç½® CMake ...
+echo [1/2] ÅäÖÃ CMake ...
 cmake -S "%~dp0." -B "%~dp0build" -G Ninja ^
       -DCMAKE_BUILD_TYPE=Release ^
       -DCMAKE_PREFIX_PATH="%QT_DIR%" || exit /b 1
 
-echo [2/2] ç¼–è¯‘ä¸­ ...
+echo [2/2] ±àÒëÖĞ ...
 cmake --build "%~dp0build" || exit /b 1
 
 echo.
 echo ============================================
-echo  ç¼–è¯‘å®Œæˆ: %~dp0build\smand.exe
+echo  ±àÒëÍê³É: %~dp0build\smand.exe
 echo ============================================
 endlocal

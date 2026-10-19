@@ -1,13 +1,10 @@
 #pragma once
 
-#include <QWidget>
-
 #include "appdata.h"
+#include "listpage.h"
 
-class QToolButton;
-
-// 通用"按钮网格"内容页：左侧每个菜单分组对应一个实例
-class LauncherPage : public QWidget
+// 静态功能项页面（系统设置 / 管理工具 / 快捷操作共用）
+class LauncherPage : public ListPage
 {
     Q_OBJECT
 
@@ -16,11 +13,8 @@ public:
                           const QList<ActionItem> &items,
                           QWidget *parent = nullptr);
 
-signals:
-    // 通知主窗口在状态栏显示执行反馈
-    void actionTriggered(const QString &message);
-
 private:
-    QToolButton *createButton(const ActionItem &item);
     void executeItem(const ActionItem &item);
+
+    QList<ActionItem> m_items;
 };

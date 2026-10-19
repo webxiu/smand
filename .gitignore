@@ -1,6 +1,7 @@
 # 构建目录
 build/
 build-*/
+build-static/
 
 # Qt Creator 用户配置
 CMakeLists.txt.user
@@ -10,3 +11,7 @@ CMakeLists.txt.user
 *.exe
 *.obj
 *.pdb
+
+# 打包产物
+dist*/
+*.zip
