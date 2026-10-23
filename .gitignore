@@ -5,7 +5,13 @@ build-static/
 
 # Qt Creator 用户配置
 CMakeLists.txt.user
+CMakeCache.txt
+CMakeFiles/
+*.user
 *.autosave
+.vs/
+.vscode/
+.idea/
 
 # 编译产物
 *.exe
