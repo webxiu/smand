@@ -1,0 +1,50 @@
+name: Build and Release Smand (static single-file)
+
+# 打 v* 标签时触发，例如：git tag v1.1.0 && git push --tags
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    # ⚠ 必须用自托管 runner：单文件 exe 依赖本机静态 Qt
+    #   (D:\apps\Qt\6.8.3\msvc2022_64_static)。GitHub 云端 windows-latest
+    #   没有静态 Qt，无法产出单文件，只能出「exe+一堆DLL」的 zip。
+    runs-on: [self-hosted, windows, x64]
+
+    # 上传 Release 资源需要写权限，否则 softprops/action-gh-release 会 403
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Clean previous static build
+        # 先清掉旧产物，避免「本次编译失败却上传了上一次的旧 exe」
+        shell: powershell
+        run: |
+          if (Test-Path build-static) { Remove-Item build-static -Recurse -Force }
+
+      - name: Build static single-file exe
+        # 复用本机脚本；传 --nopause 跳过脚本结尾的 pause，避免卡住 CI。
+        # 注意：build-static.cmd 失败时不返回非零码，故下一步用产物存在性来判定成败。
+        shell: cmd
+        run: scripts\build-static.cmd --nopause
+
+      - name: Verify artifact
+        shell: powershell
+        run: |
+          if (-not (Test-Path build-static/smand.exe)) { throw "build-static/smand.exe 未生成，编译可能失败" }
+          $f = Get-Item build-static/smand.exe
+          Write-Host ("单文件产物大小: {0:N0} 字节" -f $f.Length)
+
+      - name: Upload single-file exe to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build-static/smand.exe
+          name: smand ${{ github.ref_name }}
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
