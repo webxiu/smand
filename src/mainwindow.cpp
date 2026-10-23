@@ -76,7 +76,11 @@ MainWindow::MainWindow(QWidget *parent)
     // ===== 生成菜单和页面：静态三分组 + 安装应用 + 关于 =====
     const QList<MenuEntry> menus = AppData::menus();
     for (const MenuEntry &entry : menus) {
-        auto *page = new LauncherPage(entry.title, entry.items, this);
+        // 「管理工具」「快捷操作」的条目多能定位到真实程序文件，开启右键"打开文件所在位置"；
+        // 「系统设置」全是 ms-settings: 链接，无对应文件，不开启。
+        const bool canLocateFile = (entry.title == QStringLiteral("管理工具")
+                                    || entry.title == QStringLiteral("快捷操作"));
+        auto *page = new LauncherPage(entry.title, entry.items, this, canLocateFile);
         connect(page, &ListPage::actionTriggered, this, &MainWindow::showMessage);
         addMenuEntry(entry.title, entry.emoji, page);
     }

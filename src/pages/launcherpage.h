@@ -11,7 +11,8 @@ class LauncherPage : public ListPage
 public:
     explicit LauncherPage(const QString &title,
                           const QList<ActionItem> &items,
-                          QWidget *parent = nullptr);
+                          QWidget *parent = nullptr,
+                          bool enableFileLocationMenu = false);
 
 private:
     void executeItem(const ActionItem &item);

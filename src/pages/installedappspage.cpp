@@ -1,14 +1,18 @@
 #include "installedappspage.h"
 
 #include "icons.h"
+#include "shell.h"
 
+#include <QAction>
 #include <QFileIconProvider>
 #include <QFileInfo>
 #include <QListWidget>
+#include <QMenu>
 #include <QMessageBox>
 #include <QProcess>
 #include <QSettings>
 #include <QSet>
+#include <QStringList>
 
 #include <windows.h>
 
@@ -19,6 +23,7 @@ struct InstalledApp {
     QString name;
     QString exePath;   // 可执行文件完整路径（双击启动用）
     QString version;
+    QString uninstall; // 卸载命令（右键"卸载软件"用，注册表 UninstallString，可能为空）
 };
 
 // 展开 %SystemRoot% 之类的环境变量（注册表里常出现未展开的写法）
@@ -88,6 +93,57 @@ bool isJunkEntry(const QString &name)
     return name.startsWith(QStringLiteral("KB"), Qt::CaseInsensitive);
 }
 
+// 解析注册表 UninstallString 并启动卸载程序。常见形态：
+//   "C:\Program Files\Foo\unins000.exe"          带引号
+//   "C:\Program Files\Foo\unins000.exe" /SILENT  带引号 + 参数
+//   MsiExec.exe /X{GUID}                          不带引号 + 参数
+//   C:\Program Files\Foo\uninstall.exe            不带引号却含空格（少见）
+// 拆出「程序 + 参数」交给 QProcess 正确加引号，绕开 cmd /c 的引号剥离问题。
+bool runUninstallCommand(const QString &cmdLine)
+{
+    QString s = cmdLine.trimmed();
+    if (s.isEmpty()) {
+        return false;
+    }
+
+    QString program;
+    if (s.startsWith(QLatin1Char('"'))) {
+        // 带引号：取第一个闭合引号内的内容作为程序
+        const int end = s.indexOf(QLatin1Char('"'), 1);
+        if (end > 0) {
+            program = s.mid(1, end - 1);
+            s = s.mid(end + 1).trimmed();
+        } else {
+            program = s.mid(1);   // 缺闭合引号：整串当程序
+            s.clear();
+        }
+    } else {
+        // 不带引号：逐个 token 追加，直到命中真实存在的路径，
+        // 以兼容 "C:\Program Files\..." 这种未加引号却含空格的写法。
+        const QStringList tokens = s.split(QLatin1Char(' '), Qt::SkipEmptyParts);
+        if (tokens.isEmpty()) {
+            return false;
+        }
+        int cut = 1;   // 都不存在时退回「首个 token 当程序，其余当参数」
+        for (int n = 1; n <= tokens.size(); ++n) {
+            if (QFileInfo::exists(tokens.mid(0, n).join(QLatin1Char(' ')))) {
+                cut = n;
+                break;
+            }
+        }
+        program = tokens.mid(0, cut).join(QLatin1Char(' '));
+        s = tokens.mid(cut).join(QLatin1Char(' '));
+    }
+
+    if (program.isEmpty()) {
+        return false;
+    }
+    const QStringList args = s.isEmpty()
+        ? QStringList()
+        : s.split(QLatin1Char(' '), Qt::SkipEmptyParts);
+    return QProcess::startDetached(program, args);
+}
+
 } // namespace
 
 InstalledAppsPage::InstalledAppsPage(QWidget *parent)
@@ -109,6 +165,41 @@ InstalledAppsPage::InstalledAppsPage(QWidget *parent)
                                  QStringLiteral("无法启动「%1」：\n%2").arg(row->text(), exe));
         }
     });
+
+    // 右键菜单：打开文件所在位置 / 卸载软件
+    list()->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(list(), &QListWidget::customContextMenuRequested, this,
+            [this](const QPoint &pos) {
+                QListWidgetItem *row = list()->itemAt(pos);
+                if (!row) {
+                    return;
+                }
+                const QString exe = row->data(Qt::UserRole).toString();
+                const QString uninstall = row->data(Qt::UserRole + 1).toString();
+
+                QMenu menu(this);
+                QAction *locate = menu.addAction(QStringLiteral("打开文件所在的位置"));
+                locate->setEnabled(!exe.isEmpty());
+                QAction *uninst = menu.addAction(QStringLiteral("卸载软件"));
+                uninst->setEnabled(!uninstall.isEmpty());
+
+                QAction *chosen = menu.exec(list()->viewport()->mapToGlobal(pos));
+                if (chosen == locate) {
+                    Shell::revealInExplorer(exe);
+                    emit actionTriggered(
+                        QStringLiteral("已打开「%1」所在文件夹：%2").arg(row->text(), exe));
+                } else if (chosen == uninst) {
+                    if (runUninstallCommand(uninstall)) {
+                        emit actionTriggered(
+                            QStringLiteral("正在启动「%1」的卸载程序").arg(row->text()));
+                    } else {
+                        QMessageBox::warning(this,
+                                             QStringLiteral("卸载失败"),
+                                             QStringLiteral("无法启动「%1」的卸载程序：\n%2")
+                                                 .arg(row->text(), uninstall));
+                    }
+                }
+            });
 }
 
 void InstalledAppsPage::ensureLoaded()
@@ -141,6 +232,7 @@ void InstalledAppsPage::scan()
             const QString name = reg.value(QStringLiteral("DisplayName")).toString().trimmed();
             const QString icon = reg.value(QStringLiteral("DisplayIcon")).toString().trimmed();
             const QString version = reg.value(QStringLiteral("DisplayVersion")).toString().trimmed();
+            const QString uninstall = reg.value(QStringLiteral("UninstallString")).toString().trimmed();
             const bool systemComponent = reg.value(QStringLiteral("SystemComponent"), 0).toInt() == 1;
 
             reg.endGroup();
@@ -158,7 +250,7 @@ void InstalledAppsPage::scan()
             }
 
             seen.insert(name.toLower());
-            apps.append({ name, exe, version });
+            apps.append({ name, exe, version, uninstall });
         }
     }
 
@@ -178,6 +270,7 @@ void InstalledAppsPage::scan()
         }
         auto *row = new QListWidgetItem(icon, app.name, list());
         row->setData(Qt::UserRole, app.exePath);
+        row->setData(Qt::UserRole + 1, app.uninstall);
         if (app.version.isEmpty()) {
             row->setToolTip(QStringLiteral("%1\n%2\n\n双击打开").arg(app.name, app.exePath));
         } else {
@@ -187,5 +280,5 @@ void InstalledAppsPage::scan()
     }
 
     setTitle(QStringLiteral("安装应用（%1）").arg(apps.count()));
-    emit actionTriggered(QStringLiteral("已扫描到 %1 个已安装应用，双击即可打开").arg(apps.count()));
+    emit actionTriggered(QStringLiteral("已扫描到 %1 个已安装应用，双击打开，右键可定位文件/卸载").arg(apps.count()));
 }

@@ -37,6 +37,8 @@ set(SMAND_SOURCES
     src/data/appdata.cpp
     src/utils/icons.h
     src/utils/icons.cpp
+    src/utils/shell.h
+    src/utils/shell.cpp
 )
 
 if(QT_VERSION_MAJOR EQUAL 6)
