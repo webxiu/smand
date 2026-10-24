@@ -1,8 +1,6 @@
 # smand - 系统快捷管理器
 
-基于 **Qt 6.8.3 (MSVC 2022 x64) + CMake** 的 Windows 桌面工具。
-左侧菜单分类、右侧功能列表，一键打开系统设置、管理工具窗口和常用快捷操作，
-还能列出本机安装的应用（含真实图标），双击即可打开；关闭窗口时最小化到系统托盘。
+基于 **Qt 6.8.3 (MSVC 2022 x64) + CMake** 的 Windows 桌面工具，一键打开系统设置、管理工具、安装应用和快捷操作的应用程序。
 
 ## 界面结构
 
@@ -17,6 +15,8 @@
 │ 状态栏：显示每次操作的反馈                  │
 └───────────────────────────────────────────┘
 ```
+## 界面预览
+![界面预览](./resources/img/view.gif)
 
 ## 功能分类
 
@@ -51,13 +51,22 @@ smand/
 │   ├── data/
 │   │   └── appdata.h/cpp    # 全部功能项的数据表（改这里加功能）
 │   └── utils/
-│       └── icons.h/cpp      # emoji 渲染成 QPixmap 图标
+│       ├── icons.h/cpp      # emoji 渲染成 QPixmap 图标
+│       └── shell.h/cpp      # 在资源管理器中定位并选中文件
+├── resources/               # 图片资源：rcc 编译进 exe，用法见 resources/README.md
+│   ├── smand.qrc            # 资源清单（新增图片在此登记一行，无需改 CMake）
+│   ├── smand.rc             # 把 app.ico 嵌入 exe 作为文件图标
+│   ├── app.ico              # exe 文件图标，由 scripts/make_ico.py 生成
+│   ├── logo/                # 品牌 Logo 多倍图（关于页、窗口/托盘、exe 图标共用）
+│   ├── icons/               # UI 功能图标：逐步替代 emoji 渲染
+│   └── img/                 # 文档配图（view.gif），不编进 exe
 ├── scripts/                 # 构建 / 打包脚本
 │   ├── build.cmd            # Qt6 动态编译 → build\smand.exe
 │   ├── build-static.cmd     # Qt6 静态编译 → build-static\smand.exe（单文件）
 │   ├── build-qt5.cmd        # Qt5.15 兼容版编译 → build-qt5\smand.exe
 │   ├── package.cmd          # 打包标准分发 zip → release\
-│   └── package-qt5.cmd      # 打包老系统兼容 zip → release\
+│   ├── package-qt5.cmd      # 打包老系统兼容 zip → release\
+│   └── make_ico.py          # 由 logo 多倍图生成 app.ico（换 Logo 后重跑）
 └── release/                 # 分发 zip 产物（不入库）
 ```
 

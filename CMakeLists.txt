@@ -39,6 +39,9 @@ set(SMAND_SOURCES
     src/utils/icons.cpp
     src/utils/shell.h
     src/utils/shell.cpp
+
+    # 图片资源清单：logo / 图标经 rcc 编译进 exe 内部（用法见 resources/README.md）
+    resources/smand.qrc
 )
 
 if(QT_VERSION_MAJOR EQUAL 6)
@@ -48,6 +51,13 @@ else()
 endif()
 
 target_link_libraries(smand PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+
+# Windows exe 文件图标（资源管理器 / 桌面快捷方式显示）；
+# app.ico 由 scripts/make_ico.py 从 logo 多倍图生成，更换 Logo 后重跑即可
+if(WIN32)
+    enable_language(RC)
+    target_sources(smand PRIVATE resources/smand.rc)
+endif()
 
 # 头文件按功能分散在 src 各子目录，统一加入搜索路径，
 # 源码内 #include "xxx.h" 无需带相对路径（AUTOMOC 同样依赖此设置）

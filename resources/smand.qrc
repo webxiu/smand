@@ -1,0 +1,33 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+
+    <!--
+        smand 图片资源清单（Qt 资源系统）
+
+        作用：登记在 <qresource> 里的图片会被 rcc 编译进 smand.exe 内部，运行时
+              不依赖任何外部文件，符合本项目「轻量、免安装、单文件分发」的定位。
+              CMakeLists.txt 已开启 CMAKE_AUTORCC 并已把本文件加入 SMAND_SOURCES，
+              因此新增图片只需「放进目录 + 在下方登记一行」，不必改任何构建配置。
+
+        添加步骤：
+          1. 把图片放进 logo/ 或 icons/ 子目录（尺寸与格式规格见 resources/README.md）
+          2. 在下方 <qresource> 节点内登记一行，例如：
+                 <file>logo/smand.png</file>
+                 <file alias="app">logo/smand.svg</file>
+             路径相对于本 .qrc 文件所在目录，一律使用正斜杠 /
+          3. 重新执行 scripts\build.cmd，代码中即可用 ":/logo/smand.png" 访问
+             （带 alias 的用 ":/app" 访问）
+
+        注意：
+          · <file> 指向的文件必须真实存在，否则 rcc 报错并终止编译。
+          · 当前已登记 logo/logo@5x.png：关于页大图与窗口/托盘图标共用它。
+          · .gitkeep 只是空目录占位文件，不要登记进本清单。
+          · Windows 的 exe 文件图标（app.ico）不能走 qrc，须以 win32 资源方式
+            嵌入，接入方法见 resources/README.md 末尾一节。
+    -->
+
+    <qresource prefix="/">
+        <file>logo/logo@5x.png</file>
+    </qresource>
+
+</RCC>

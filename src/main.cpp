@@ -1,8 +1,7 @@
 #include "mainwindow.h"
 
-#include "icons.h"
-
 #include <QApplication>
+#include <QIcon>
 #include <QStyleFactory>
 
 // 全局样式表：浅色简洁风格（仿 Win11 设置页观感）
@@ -117,8 +116,8 @@ int main(int argc, char *argv[])
     app.setStyle(QStyleFactory::create(QStringLiteral("Fusion")));
     app.setStyleSheet(QString::fromUtf8(kStyleSheet));
 
-    // 应用图标（托盘 / 任务栏 / 标题栏共用）
-    app.setWindowIcon(QIcon(Icons::emoji(QStringLiteral("🧰"), 64)));
+    // 应用图标（托盘 / 任务栏 / 标题栏共用，资源内嵌真图）
+    app.setWindowIcon(QIcon(QStringLiteral(":/logo/logo@5x.png")));
 
     // 关闭窗口 = 隐藏到托盘，程序只能从托盘菜单退出
     app.setQuitOnLastWindowClosed(false);

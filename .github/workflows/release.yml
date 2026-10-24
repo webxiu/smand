@@ -3,6 +3,9 @@ name: Build and Release Smand (static single-file)
 # 打 v* 标签时触发，例如：git tag v1.1.0 && git push --tags
 on:
   push:
+    # 只监听 main 分支提交代码就执行发布(可选)
+    # branches:
+    #   - main
     tags:
       - 'v*'
 

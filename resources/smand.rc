@@ -1,0 +1,4 @@
+// smand 的 Windows 资源脚本：把 app.ico 嵌入 exe 作为文件图标
+// （资源管理器、桌面快捷方式、任务栏固定项显示的就是它）
+// app.ico 由 scripts/make_ico.py 从 resources/logo 多倍图生成
+IDI_ICON1 ICON "app.ico"

@@ -1,17 +1,17 @@
 #include "aboutpage.h"
 
-#include "icons.h"
-
 #include <QApplication>
 #include <QLabel>
+#include <QPixmap>
 #include <QVBoxLayout>
 
 AboutPage::AboutPage(QWidget *parent)
     : QWidget(parent)
 {
-    // 应用 Logo
+    // 应用 Logo（资源内嵌真图，256 源图平滑缩放到 96 显示）
     auto *logo = new QLabel(this);
-    logo->setPixmap(Icons::emoji(QStringLiteral("🧰"), 96));
+    logo->setPixmap(QPixmap(QStringLiteral(":/logo/logo@5x.png"))
+                        .scaled(96, 96, Qt::KeepAspectRatio, Qt::SmoothTransformation));
     logo->setAlignment(Qt::AlignCenter);
 
     // 应用名 + 版本
